@@ -8,10 +8,10 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
+	"github.com/ouyangshangwen/lemon/utils"
 	"html/template"
 	"io"
 	"io/ioutil"
-	"lemon/utils"
 	"net/http"
 	"reflect"
 	"runtime/debug"
@@ -46,7 +46,7 @@ type RequestHandler struct {
 	ResponseWriter http.ResponseWriter
 	Request        *HttpRequest
 	Status         int
-	xsrfToken      string
+	XsrfToken      string
 	application    Application
 	contentType    string
 	WroteHeader    bool
@@ -65,6 +65,14 @@ func (rh *RequestHandler) Init(self HandlerInterface, request *HttpRequest,
 	rh.Clear()
 	rh.WroteHeader = false
 	rh.delegate.Initialize(params)
+}
+
+func (rh *RequestHandler) GetDelegate() HandlerInterface {
+	return rh.delegate
+}
+
+func (rh *RequestHandler) GetApplicaion() Application {
+	return rh.application
 }
 
 //Returns the value of the argument with the given name.
@@ -505,7 +513,7 @@ func (rh *RequestHandler) RenderByte(templateName string, context map[string]int
 
 	if rh.application.IsCustomedTemplate {
 		rh.Status = 500
-		panic("if `application.IsCustomedTemplate is true`, must overwrite the method of RenderByte ")
+		panic("if `Application.IsCustomedTemplate is true`, must overwrite the method of RenderByte ")
 	}
 	namespace := rh.GetTemplateNamespace()
 	for key, value := range namespace {
@@ -686,16 +694,16 @@ func (rh *RequestHandler) RaiseHttpError(status int, message string) {
 
 // XsrfFormHtml writes an input field contains xsrf token value.
 func (rh *RequestHandler) XsrfFormHtml() string {
-	rh.XsrfToken()
+	rh.GetXsrfToken()
 
 	return `<input type="hidden" name="_xsrf" value="` +
-		rh.xsrfToken + `">`
+		rh.XsrfToken + `">`
 
 }
 
-// XsrfToken creates a xsrf token string and returns.
+// GetXsrfToken creates a xsrf token string and returns.
 // you can set global expire in Application or set in your handler default 60 second
-func (rh *RequestHandler) XsrfToken() string {
+func (rh *RequestHandler) GetXsrfToken() string {
 	intExpire := rh.application.Expires
 	var timeduration int
 	if rh.Expires != 0 {
@@ -706,16 +714,16 @@ func (rh *RequestHandler) XsrfToken() string {
 	} else {
 		timeduration = intExpire
 	}
-	if rh.xsrfToken == "" {
+	if rh.XsrfToken == "" {
 		token := rh.GetSecureCookie("_xsrf")
 		if len(token) == 0 {
 			token = string(utils.RandomCreateBytes(32))
 			expires := time.Now().UTC().Add(time.Duration(timeduration) * time.Second)
 			rh.SetSecureCookie("_xsrf", token, map[string]interface{}{"expires": expires})
 		}
-		rh.xsrfToken = token
+		rh.XsrfToken = token
 	}
-	return rh.xsrfToken
+	return rh.XsrfToken
 }
 
 // CheckXsrfCookie checks xsrf token in this request is valid or not.
@@ -731,7 +739,7 @@ func (rh *RequestHandler) CheckXsrfCookie() bool {
 	}
 	if token == "" {
 		rh.RaiseHttpError(403, "'_xsrf' argument missing from POST")
-	} else if rh.XsrfToken() != token {
+	} else if rh.GetXsrfToken() != token {
 		rh.RaiseHttpError(403, "XSRF cookie does not match POST argument")
 	}
 	return true

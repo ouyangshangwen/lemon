@@ -26,8 +26,8 @@ type RequestHandler struct {
 	ResponseWriter  http.ResponseWriter
 	Request         *HttpRequest
 	Status          int
-	xsrfToken       string
-	application     Application
+	XsrfToken       string
+	Application     Application
 	contentType     string
 	WroteHeader     bool
 	delegate HandlerInterface
@@ -42,6 +42,8 @@ type RequestHandler struct {
 
 ## RequestHandler函数
 
+*  ``GetApplication()``
+	获取配置信息
 *  ``GetArgument(name string) string``
 	获取请求的参数包括form和url中的参数，如果有多个重名参数取第一个
 *  ``GetArguments(name string) []string``
@@ -128,7 +130,7 @@ func (h *HelloHandler) Initialize(params lemon.Dictionary) {
 	下载文件，调用此函数之前，必须设置好相关的头信息
 *  ``XsrfFormHtml() string``
 	生成隐藏的form input域
-*  ``XsrfToken() string``
+*  ``GetXsrfToken() string``
 	 生成xsrf的token并且添加到安全cookie中
 *  ``CheckXsrfCookie() bool``
 	检查是否有Xsrftoken
