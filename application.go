@@ -69,8 +69,7 @@ func (app *Application) Init(urlSpecs []UrlSpec, settings map[string]interface{}
 	app.AbsWorkPath = AbsWorkPath
 	app.NameHandlers = map[string]UrlSpec{}
 
-	if len(app.StaticPath) == 0 {
-		app.StaticPath = filepath.Join(AbsWorkPath, "/static")
+	if len(app.StaticPath) != 0 {
 		statics := [3]string{"/static/(.*)", "/(favicon.ico)", "/(robots.txt)"}
 		for _, static := range statics {
 			staticHander := &StaticFileHandler{}

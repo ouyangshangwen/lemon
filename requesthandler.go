@@ -609,7 +609,8 @@ func (rh *RequestHandler) Execute(args []string) {
 	rh.CallMethod(method, args)
 
 	rh.Request.Finish()
-	logInfo := fmt.Sprintf(" %s %s %s", rh.Request.Method(), rh.Request.Url(), rh.Request.RequestTime())
+    logInfo := fmt.Sprintf(" %d %s %s %s", rh.Status, rh.Request.Method(), rh.Request.Url(), rh.Request.RequestTime())
+
 	lemonLag.Info(logInfo)
 	rh.delegate.Finish()
 
