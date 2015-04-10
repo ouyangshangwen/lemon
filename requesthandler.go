@@ -571,9 +571,12 @@ func (rh *RequestHandler) recoverFromPanic() {
 
 		if rh.application.Debug {
 			//panic(err)
-			debugStack := debug.Stack()
-			rh.HttpError(rh.Status, string(debugStack))
-			//fmt.Println(string(debugStack))
+            debugStack := debug.Stack()
+            resposeErr := fmt.Sprintf(`<html><title>Error</title><body>
+                <pre style=\"word-wrap: break-word; white-space: pre-wrap;\" >%s</pre>
+                </body></html>`, string(debugStack))
+            rh.HttpError(rh.Status, resposeErr)
+            fmt.Println(string(debugStack))
 			return
 		}
 		status := rh.Status
