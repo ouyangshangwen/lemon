@@ -22,7 +22,7 @@ func main() {
 		"IsGzip": false,
 		"NUMCPU":     8,
 	}
-	handlers := []lemon.UrlHandler{
+	handlers := []lemon.UrlSpec{
 		lemon.AddRouter("/", &HelloWorldHandler{}, lemon.NullDictionary(), ""),
 	}
 
