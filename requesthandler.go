@@ -131,7 +131,7 @@ func (rh *RequestHandler) GetQueryArgumentDefault(name, _default string) string 
 //
 //If the argument is not present, returns an empty list
 func (rh *RequestHandler) GetQueryArguments(name string) []string {
-	return rh._getArguments(name)
+	return rh._getQueryArguments(name)
 }
 
 func (rh *RequestHandler) _getQueryArgument(name, _default string) string {
