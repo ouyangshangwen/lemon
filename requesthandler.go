@@ -600,6 +600,11 @@ func (rh *RequestHandler) recoverFromPanic() {
 	}
 }
 
+
+func (rh *RequestHandler) Method() string{
+    return rh.Request.Method()
+}
+
 var SUPPORTEDMETHOD = []string{"GET", "HEAD", "POST", "DELETE", "PATCH", "PUT", "OPTIONS"}
 var XSRFMETHOD = []string{"GET", "HEAD", "OPTIONS"}
 
