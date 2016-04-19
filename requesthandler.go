@@ -605,6 +605,11 @@ func (rh *RequestHandler) Method() string{
     return rh.Request.Method()
 }
 
+
+func (rh *RequestHandler) Body() []byte{
+    return rh.Request.Body()
+}
+
 var SUPPORTEDMETHOD = []string{"GET", "HEAD", "POST", "DELETE", "PATCH", "PUT", "OPTIONS"}
 var XSRFMETHOD = []string{"GET", "HEAD", "OPTIONS"}
 
