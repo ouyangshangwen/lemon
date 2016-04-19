@@ -113,6 +113,14 @@ func (rh *RequestHandler) _getArguments(name string) []string {
 	}
 }
 
+func (rh *RequestHandler) GetAllArguments() map[string][]string {
+    values :=  map[string][]string{}
+    for k ,v := range rh.Request.FormArguments {
+        values[k] = v
+    }
+    return values
+}
+
 //Returns the value of the argument with the given name,
 //from the request query string
 //If default is not provided, default is ""

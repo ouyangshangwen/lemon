@@ -68,7 +68,21 @@ func (hr *HttpRequest) ParseParams() {
 	for key, values := range hr.QueryArguments {
 		hr.FormArguments[key] = append(hr.FormArguments[key], values...)
 	}
+    for key, values := range hr.FormArguments {
+        hr.FormArguments[key] = hr.Set(values)
+    }
+}
 
+func(hr *HttpRequest) Set(args []string) (data []string) {
+    set := map[string]int{}
+    for _, arg := range args {
+        set[arg] = 1
+    }
+
+    for k, _ :=range set {
+        data = append(data, k)
+    }
+    return
 }
 
 func (hr *HttpRequest) Url() string {
