@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"io"
+	"bytes"
 )
 
 type HttpRequest struct {
@@ -18,6 +20,7 @@ type HttpRequest struct {
 	QueryArguments url.Values
 	FormArguments  url.Values // Parameters from the request body.
 	MaxMemory      int64
+	body []byte
 	Files          map[string][]*multipart.FileHeader // Files uploaded in a multipart form
 }
 
@@ -39,6 +42,7 @@ func (hr *HttpRequest) ParseParams() {
 	hr.FormArguments = make(url.Values)
 	// Parse the body depending on the content type.
 	ContentType := ResolveContentType(req)
+	hr.parseBody()
 	switch ContentType {
 	case "application/x-www-form-urlencoded":
 		// Typical form.
@@ -71,6 +75,7 @@ func (hr *HttpRequest) ParseParams() {
     for key, values := range hr.FormArguments {
         hr.FormArguments[key] = hr.Set(values)
     }
+
 }
 
 func(hr *HttpRequest) Set(args []string) (data []string) {
@@ -207,14 +212,17 @@ func (hr *HttpRequest) Method() string {
 	return hr.Request.Method
 }
 
+func (hr *HttpRequest) parseBody() {
+		safe := &io.LimitedReader{R: hr.Request.Body, N: hr.MaxMemory}
+		requestbody, _ := ioutil.ReadAll(safe)
+		hr.Request.Body.Close()
+		bf := bytes.NewBuffer(requestbody)
+		hr.body = bf.Bytes()
+		hr.Request.Body = ioutil.NopCloser(bf)
+}
 func (hr *HttpRequest) Body() []byte {
-	defer hr.Request.Body.Close()
-	requestbody, err := ioutil.ReadAll(hr.Request.Body)
-	if err != nil {
-		return []byte{}
-	} else {
-		return requestbody
-	}
+	return hr.body
+
 }
 
 func (hr *HttpRequest) Cookies() []*http.Cookie {
