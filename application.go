@@ -237,15 +237,26 @@ func (app *Application) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		redirecthandler.Init(redirecthandler, request, rw, app, kwargs)
 		//redirecthandler.Url = "http://" + app.DefaultHost + "/"
 		handler = redirecthandler
+		redirecthandler.Init(handler, request, rw, app, kwargs) // #
+		redirecthandler.Execute(args)
 
 	} else {
 		for _, spec := range handlers {
 			match := spec.Regexps.MatchString(request.Url())
 			if match {
 				handler = spec.HandlerClass
+
 				args = spec.Regexps.FindStringSubmatch(request.Url())[1:]
 				kwargs = spec.Kwargs
-				break
+
+		        instance := reflect.New(spec.HandlerType)
+		        instanceHandlerInterface, ok := instance.Interface().(HandlerInterface)
+                if !ok {
+                    panic("is not HandlerInterface")
+                }else {
+                    instanceHandlerInterface.Init(instanceHandlerInterface, request, rw, app, kwargs) // #
+                    instanceHandlerInterface.Execute(args)
+                }
 			}
 		}
 
@@ -253,20 +264,8 @@ func (app *Application) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	if handler == nil {
 		app.NotFound(rw, r)
-	} else {
-		var instanceHandlerInterface HandlerInterface
-		instanceValue := reflect.ValueOf(handler)
-		instanceType := reflect.Indirect(instanceValue).Type()
-		instance := reflect.New(instanceType)
-		instanceHandlerInterface, ok := instance.Interface().(HandlerInterface)
-
-		if !ok {
-			panic("is not HandlerInterface")
-		}
-
-		instanceHandlerInterface.Init(instanceHandlerInterface, request, rw, app, kwargs) // #
-		instanceHandlerInterface.Execute(args)
-		handler = nil
+	}else {
+        handler = nil
 	}
 
 }
@@ -328,6 +327,7 @@ type UrlSpec struct {
 	Name         string
 	pattern      string
 	HandlerClass HandlerInterface
+    HandlerType reflect.Type
 	Kwargs       Dictionary
 	Regexps      *regexp.Regexp
 	path         string
@@ -349,6 +349,9 @@ type UrlSpec struct {
 func NewUrlSpec(pattern string, handlerclass HandlerInterface,
 	name string, params Dictionary) UrlSpec {
 
+	instanceValue := reflect.ValueOf(handlerclass)
+	instanceType := reflect.Indirect(instanceValue).Type()
+
 	urlspec := UrlSpec{}
 	if !strings.HasSuffix(pattern, "$") {
 		pattern = pattern + "$"
@@ -360,6 +363,7 @@ func NewUrlSpec(pattern string, handlerclass HandlerInterface,
 	urlspec.pattern = pattern
 	urlspec.Name = name
 	urlspec.HandlerClass = handlerclass
+    urlspec.HandlerType = instanceType 
 	urlspec.Regexps, _ = regexp.Compile(pattern)
 	urlspec.path, urlspec.GroupCount = urlspec.findGroups()
 	urlspec.Kwargs = params

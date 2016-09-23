@@ -27,13 +27,20 @@ const (
 )
 
 type HandlerInterface interface {
+    Get(...string)
+    Post(...string)
+    Delete(...string)
+    Put(...string)
+    Head(...string)
+    Patch(...string)
+    Options(...string)
+    Finish()
 	Execute([]string)
 	Init(HandlerInterface, *HttpRequest, http.ResponseWriter, *Application, Dictionary)
 	CallMethod(string, []string)
 	Initialize(Dictionary)
 	RenderByte(string, map[string]interface{}) []byte
 	Prepare()
-	Finish()
 	GetStatus() int
 	HttpError(int, string)
 	RaiseHttpError(int, string)
@@ -54,6 +61,7 @@ type RequestHandler struct {
 	RaiseError     bool
 	Expires        int
 }
+
 
 func (rh *RequestHandler) Init(self HandlerInterface, request *HttpRequest,
 	rw http.ResponseWriter, app *Application, params Dictionary) {
@@ -242,45 +250,45 @@ func (rh *RequestHandler) SetDefaultHeaders() {
 
 }
 
-//func (rh *RequestHandler) Head(args ...string) {
-//	http.Error(rh.ResponseWriter, "Method Not Allowed", 405)
-//}
-//
-//func (rh *RequestHandler) Put(args ...string) {
-//	//http.Error(rh.ResponseWriter, "Method Not Allowed", 405)
-//	rh.Status = 405
-//	panic("Method Not Allowed")
-//}
-//
-//func (rh *RequestHandler) Post(args ...string) {
-//	//http.Error(rh.ResponseWriter, "Method Not Allowed", 405)
-//	rh.Status = 405
-//	panic("Method Not Allowed")
-//}
-//
-//func (rh *RequestHandler) Get(args ...string) {
-//	//http.Error(rh.ResponseWriter, "Method Not Allowed", 405)
-//	rh.Status = 405
-//	panic("Method Not Allowed")
-//}
-//
-//func (rh *RequestHandler) Patch(args ...string) {
-//	//http.Error(rh.ResponseWriter, "Method Not Allowed", 405)
-//	rh.Status = 405
-//	panic("Method Not Allowed")
-//}
-//
-//func (rh *RequestHandler) Options(args ...string) {
-//	//http.Error(rh.ResponseWriter, "Method Not Allowed", 405)
-//	rh.Status = 405
-//	panic("Method Not Allowed")
-//}
-//
-//func (rh *RequestHandler) Delete(args ...string) {
-//	//http.Error(rh.ResponseWriter, "Method Not Allowed", 405)
-//	rh.Status = 405
-//	panic("Method Not Allowed")
-//}
+func (rh *RequestHandler) Head(args ...string) {
+	http.Error(rh.ResponseWriter, "Method Not Allowed", 405)
+}
+
+func (rh *RequestHandler) Put(args ...string) {
+	//http.Error(rh.ResponseWriter, "Method Not Allowed", 405)
+	rh.Status = 405
+	panic("Method Not Allowed")
+}
+
+func (rh *RequestHandler) Post(args ...string) {
+	//http.Error(rh.ResponseWriter, "Method Not Allowed", 405)
+	rh.Status = 405
+	panic("Method Not Allowed")
+}
+
+func (rh *RequestHandler) Get(args ...string) {
+	//http.Error(rh.ResponseWriter, "Method Not Allowed", 405)
+	rh.Status = 405
+	panic("Method Not Allowed")
+}
+
+func (rh *RequestHandler) Patch(args ...string) {
+	//http.Error(rh.ResponseWriter, "Method Not Allowed", 405)
+	rh.Status = 405
+	panic("Method Not Allowed")
+}
+
+func (rh *RequestHandler) Options(args ...string) {
+	//http.Error(rh.ResponseWriter, "Method Not Allowed", 405)
+	rh.Status = 405
+	panic("Method Not Allowed")
+}
+
+func (rh *RequestHandler) Delete(args ...string) {
+	//http.Error(rh.ResponseWriter, "Method Not Allowed", 405)
+	rh.Status = 405
+	panic("Method Not Allowed")
+}
 
 // GetSecureCookie returns decoded cookie value from encoded browser cookie values.
 func (rh *RequestHandler) GetSecureCookie(key string) string {
@@ -624,8 +632,8 @@ func (rh *RequestHandler) Execute(args []string) {
 	}
 	rh.delegate.Prepare()
 	method := rh.Request.Method()
-	method = strings.ToLower(method)
-	method = strings.Title(method)
+	method = strings.ToUpper(method)
+	//method = strings.Title(method)
 
 	rh.CallMethod(method, args)
 
@@ -647,49 +655,26 @@ func (rh *RequestHandler) checkNotMethod(methods []string) bool {
 }
 
 func (rh *RequestHandler) CallMethod(methodName string, args []string) {
-	var ptr reflect.Value
-	var value reflect.Value
-	var finalMethod reflect.Value
-	value = reflect.ValueOf(rh.delegate)
-	// if we start with a pointer, we need to get value pointed to
-	// if we start with a value, we need to get a pointer to that value
-	if value.Type().Kind() == reflect.Ptr {
-		ptr = value
-		value = ptr.Elem()
-	} else {
-		ptr = reflect.New(reflect.TypeOf(rh.delegate))
-		temp := ptr.Elem()
-		temp.Set(value)
-	}
-
-	// check for method on value
-	method := value.MethodByName(methodName)
-	if method.IsValid() {
-		finalMethod = method
-	}
-	// check for method on pointer
-	method = ptr.MethodByName(methodName)
-	if method.IsValid() {
-		finalMethod = method
-	}
-	if finalMethod.IsValid() {
-		length := finalMethod.Type().NumIn()
-		in := make([]reflect.Value, length)
-		if length == len(args) {
-			for i, arg := range args {
-				in[i] = reflect.ValueOf(arg)
-			}
-		} else {
-			lemonLag.Error("args not match")
-			panic("args not match")
-		}
-		finalMethod.Call(in)
-		return
-	}else {
+    switch methodName{
+    case "GET":
+        rh.delegate.Get(args...)
+    case "POST":
+        rh.delegate.Post(args...)
+    case "DELETE":
+        rh.delegate.Delete(args...)
+    case "PUT":
+        rh.delegate.Put(args...)
+    case "HEAD":
+        rh.delegate.Head(args...)
+    case "PATCH":
+        rh.delegate.Patch(args...)
+    case "OPTIONS":
+        rh.delegate.Options(args...)
+    default:
         rh.HttpError(405, "method not allowed") 
 	    lemonLag.Error("no this method")
-        return
     }
+    return
 }
 
 func (rh *RequestHandler) Redirect(url string, status int) {
@@ -792,7 +777,7 @@ func (redirecthandler *RedirectHandler) Initialize(params Dictionary) {
 
 }
 
-func (redirecthandler *RedirectHandler) Get() {
+func (redirecthandler *RedirectHandler) Get(args ...string) {
 
 	redirecthandler.Redirect(redirecthandler.Url, redirecthandler.Status)
 }

@@ -24,15 +24,15 @@ func (sh *StaticFileHandler) Initialize(params Dictionary) {
 	sh.root = params["path"].(string)
 }
 
-func (sh *StaticFileHandler) Get(Path string) {
-	sh.Extension = filepath.Ext(Path)
+func (sh *StaticFileHandler) Get(Path ...string) {
+	sh.Extension = filepath.Ext(Path[0])
 	if sh.Request.Method() != "GET" && sh.Request.Method() != "HEAD" {
 		http.NotFound(sh.ResponseWriter, sh.Request.Request)
 		return
 	}
 	//requestPath := path.Clean(sh.Request.Url())
 	//file := path.Join(sh.application.AbsWorkPath, sh.application.StaticPath, Path)
-	file := path.Join(sh.root, Path)
+	file := path.Join(sh.root, Path[0])
 	fileStat, err := os.Stat(file)
 	if err != nil {
 		http.NotFound(sh.ResponseWriter, sh.Request.Request)
