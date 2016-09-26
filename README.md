@@ -13,7 +13,7 @@ lemon的设计目标，设计最小，最精简的框架，所有无关的部分
  package main
 
 import (
-	"lemon"
+    "github.com/ouyangshangwen/lemon"
 )
 
 func main() {
@@ -36,7 +36,7 @@ type HelloWorldHandler struct {
 	lemon.RequestHandler
 }
 
-func (hw *HelloWorldHandler) Get() {
+func (hw *HelloWorldHandler) Get(_ ...string) {
 	hw.WriteString("Hello, world")
 }
 ```
